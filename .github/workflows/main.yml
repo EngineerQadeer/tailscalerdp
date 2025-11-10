@@ -31,11 +31,12 @@ jobs:
 
       - name: Create RDP User with Secure Password
         run: |
-          $password = 4aheffE5
+          $password = "4aheffE5"
           $securePass = ConvertTo-SecureString $password -AsPlainText -Force
-          New-AdminUser -Name "Bablu" -Password $securePass -AccountNeverExpires
-          Add-AdminGroupMember -Group "Administrators" -Member "Bablu"
-          Add-AdminGroupMember -Group "Remote Desktop Users" -Member "Bablu"
+          
+          New-LocalUser -Name "Bablu" -Password $securePass -AccountNeverExpires
+          Add-LocalGroupMember -Group "Administrators" -Member "Bablu"
+          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "Bablu"
           
           echo "RDP_CREDS=User: Bablu | Password: $password" >> $env:GITHUB_ENV
           
@@ -43,6 +44,7 @@ jobs:
               Write-Error "User creation failed"
               exit 1
           }
+
 
       - name: Install Tailscale
         run: |
