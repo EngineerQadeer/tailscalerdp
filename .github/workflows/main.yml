@@ -31,28 +31,23 @@ jobs:
 
       - name: Reset RunnerAdmin Password
         run: |
+         
           $password = "4aheffE5"
           $securePass = ConvertTo-SecureString $password -AsPlainText -Force
           
-          # Reset password for existing user
           Set-LocalUser -Name "runneradmin" -Password $securePass
-          
-          # Ensure account is enabled
           Enable-LocalUser -Name "runneradmin"
           
-          # Add to necessary groups only if not already present
-          if (-not (Get-LocalGroupMember -Group "Administrators" | Where-Object { $_.Name -eq "runneradmin" })) {
+          # Check existence in groups properly
+          $adminMembers = Get-LocalGroupMember -Group "Administrators" | Select-Object -ExpandProperty Name
+          $rdpMembers = Get-LocalGroupMember -Group "Remote Desktop Users" | Select-Object -ExpandProperty Name
+          
+          if ($adminMembers -notcontains "runneradmin") {
               Add-LocalGroupMember -Group "Administrators" -Member "runneradmin"
           }
-          if (-not (Get-LocalGroupMember -Group "Remote Desktop Users" | Where-Object { $_.Name -eq "runneradmin" })) {
+          
+          if ($rdpMembers -notcontains "runneradmin") {
               Add-LocalGroupMember -Group "Remote Desktop Users" -Member "runneradmin"
-          }
-          
-          echo "RDP_CREDS=User: runneradmin | Password: $password" >> $env:GITHUB_ENV
-          
-          if (-not (Get-LocalUser -Name "runneradmin")) {
-              Write-Error "User runneradmin not found"
-              exit 1
           }
 
       - name: Install Tailscale
