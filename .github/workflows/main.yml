@@ -37,18 +37,6 @@ jobs:
           
           Set-LocalUser -Name "runneradmin" -Password $securePass
           Enable-LocalUser -Name "runneradmin"
-          
-          # Check existence in groups properly
-          $adminMembers = Get-LocalGroupMember -Group "Administrators" | Select-Object -ExpandProperty Name
-          $rdpMembers = Get-LocalGroupMember -Group "Remote Desktop Users" | Select-Object -ExpandProperty Name
-          
-          if ($adminMembers -notcontains "runneradmin") {
-              Add-LocalGroupMember -Group "Administrators" -Member "runneradmin"
-          }
-          
-          if ($rdpMembers -notcontains "runneradmin") {
-              Add-LocalGroupMember -Group "Remote Desktop Users" -Member "runneradmin"
-          }
 
       - name: Install Tailscale
         run: |
