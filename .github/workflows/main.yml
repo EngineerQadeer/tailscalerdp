@@ -22,7 +22,7 @@ jobs:
           # Remove any existing rule with the same name to avoid duplication
           netsh advfirewall firewall delete rule name="RDP-Tailscale"
           
-          # For testing, allow any incoming connection on port 3389
+          # Allow incoming connection on port 3389
           netsh advfirewall firewall add rule name="RDP-Tailscale" `
             dir=in action=allow protocol=TCP localport=3389
 
@@ -40,9 +40,13 @@ jobs:
           # Ensure account is enabled
           Enable-LocalUser -Name "runneradmin"
           
-          # Add to necessary groups (if not already)
-          Add-LocalGroupMember -Group "Administrators" -Member "runneradmin"
-          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "runneradmin"
+          # Add to necessary groups only if not already present
+          if (-not (Get-LocalGroupMember -Group "Administrators" | Where-Object { $_.Name -eq "runneradmin" })) {
+              Add-LocalGroupMember -Group "Administrators" -Member "runneradmin"
+          }
+          if (-not (Get-LocalGroupMember -Group "Remote Desktop Users" | Where-Object { $_.Name -eq "runneradmin" })) {
+              Add-LocalGroupMember -Group "Remote Desktop Users" -Member "runneradmin"
+          }
           
           echo "RDP_CREDS=User: runneradmin | Password: $password" >> $env:GITHUB_ENV
           
