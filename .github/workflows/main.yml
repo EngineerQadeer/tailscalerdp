@@ -26,25 +26,30 @@ jobs:
           netsh advfirewall firewall add rule name="RDP-Tailscale" `
             dir=in action=allow protocol=TCP localport=3389
 
-          # (Optional) Restart the Remote Desktop service to ensure changes take effect
+          # Restart the Remote Desktop service to ensure changes take effect
           Restart-Service -Name TermService -Force
 
-      - name: Create RDP User with Secure Password
+      - name: Reset RunnerAdmin Password
         run: |
           $password = "4aheffE5"
           $securePass = ConvertTo-SecureString $password -AsPlainText -Force
           
-          New-LocalUser -Name "Bablu" -Password $securePass -AccountNeverExpires
-          Add-LocalGroupMember -Group "Administrators" -Member "Bablu"
-          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "Bablu"
+          # Reset password for existing user
+          Set-LocalUser -Name "runneradmin" -Password $securePass
           
-          echo "RDP_CREDS=User: Bablu | Password: $password" >> $env:GITHUB_ENV
+          # Ensure account is enabled
+          Enable-LocalUser -Name "runneradmin"
           
-          if (-not (Get-LocalUser -Name "Bablu")) {
-              Write-Error "User creation failed"
+          # Add to necessary groups (if not already)
+          Add-LocalGroupMember -Group "Administrators" -Member "runneradmin"
+          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "runneradmin"
+          
+          echo "RDP_CREDS=User: runneradmin | Password: $password" >> $env:GITHUB_ENV
+          
+          if (-not (Get-LocalUser -Name "runneradmin")) {
+              Write-Error "User runneradmin not found"
               exit 1
           }
-
 
       - name: Install Tailscale
         run: |
@@ -91,8 +96,8 @@ jobs:
         run: |
           Write-Host "`n=== RDP ACCESS ==="
           Write-Host "Address: $env:TAILSCALE_IP"
-          Write-Host "Username: RDP"
-          Write-Host "Password: $(echo $env:RDP_CREDS)"
+          Write-Host "Username: runneradmin"
+          Write-Host "Password: 4aheffE5"
           Write-Host "==================`n"
           
           # Keep runner active indefinitely (or until manually cancelled)
