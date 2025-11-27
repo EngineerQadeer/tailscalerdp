@@ -36,7 +36,6 @@ jobs:
           $securePass = ConvertTo-SecureString $password -AsPlainText -Force
           
           Set-LocalUser -Name "runneradmin" -Password $securePass
-          Enable-LocalUser -Name "runneradmin"
 
       - name: Install Tailscale
         run: |
